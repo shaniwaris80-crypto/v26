@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FACTU MIRAL · RESET</title>
+  <style>
+    body{font-family:system-ui;margin:20px}
+    .box{border:1px solid #111;border-radius:14px;padding:14px;background:#fff}
+    pre{background:#f7f7f7;border:1px solid #ddd;border-radius:12px;padding:10px;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Reset Service Worker / Cache</h2>
+    <div id="out">Ejecutando…</div>
+    <pre id="log"></pre>
+    <p><b>Cuando ponga “OK”:</b> cierra TODAS las pestañas de Safari y vuelve a abrir tu web.</p>
+  </div>
+
+<script>
+(async () => {
+  const log = (t) => (document.getElementById('log').textContent += t + "\n");
+  try {
+    log("URL: " + location.href);
+
+    // 1) Unregister SW
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      log("SW regs: " + regs.length);
+      for (const r of regs) {
+        try { await r.unregister(); log("SW unregistered ✅"); } catch(e){ log("SW unregister error: " + e); }
+      }
+    } else {
+      log("No serviceWorker support");
+    }
+
+    // 2) Clear caches
+    if (window.caches && caches.keys) {
+      const keys = await caches.keys();
+      log("Caches: " + keys.length);
+      for (const k of keys) {
+        try { await caches.delete(k); log("Cache deleted: " + k); } catch(e){ log("Cache delete error: " + e); }
+      }
+    } else {
+      log("No caches API");
+    }
+
+    document.getElementById('out').textContent = "OK ✅ Reset hecho.";
+  } catch (e) {
+    document.getElementById('out').textContent = "ERROR ❌ " + (e && e.message ? e.message : e);
+    log(String(e && e.stack ? e.stack : e));
+  }
+})();
+</script>
+</body>
+</html>
